@@ -5,10 +5,25 @@ Webscraper for 2700chess.com
 Used to show live ratings of the top chess players
 @author: Richard Chen 
 """
+import sqlite3
 #Framework used to parse HTML
 from bs4 import BeautifulSoup as soup
 # Used to grab the URL
 from urllib.request import urlopen as req
+#Create a connection to the database
+conn = sqlite3.connect('chess.db')
+#'memory' for in memory database
+#Allows for execution of SQL commands
+c = conn.cursor()
+#Create table that will hold chess player's name,country and rating
+#Uncomment this code the first time program is run, then comment it out as table has been created
+#""" allows for a single string to take up multiple lines of code
+# c.execute("""CREATE TABLE chess_player(
+#              name text,
+#              country text,
+#              rating float 
+#              )""")
+
 #Prompts user to select chess ratings list to be viewed
 my_url = input('Which chess ratings would you like to view? Male:(M) , Male Top 100(M2), Female(F), Female Top 50 (F2):')
 #Prompters user to input again if user does not enter any of the lists
@@ -55,6 +70,19 @@ for index, value in enumerate(C):
     rating = search_rating[0].strong.text
     #Output player's rating
     print (country +' '+ 'Rating:' + rating)
-
+    #Query to see if entry in database already exists
+    result = ('SELECT EXISTS(SELECT * FROM chess_player WHERE name =?',(name,))
+    if result:  
+        print("Player is already in the database!")
+    #Inserts player info into database if entry does not exist
+    else:
+        c.execute("INSERT INTO chess_player(name,country,rating) VALUES(?,?,?)",(name,country,rating))
+        conn.commit()
+#c.execute("DELETE FROM chess_player WHERE name='Carlsen'")
+#print(c.fetchone())
+#Prints content of database
+for row in c.execute("SELECT*FROM chess_player"):
+    print(row)
+conn.close()
     
     
